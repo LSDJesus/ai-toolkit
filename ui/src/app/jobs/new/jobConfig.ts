@@ -1,4 +1,4 @@
-import { JobConfig, DatasetConfig, SliderConfig } from '@/types';
+import { JobConfig, DatasetConfig, SliderConfig, ZImageSliderConfig } from '@/types';
 
 export const defaultDatasetConfig: DatasetConfig = {
   folder_path: '/path/to/images/folder',
@@ -26,6 +26,49 @@ export const defaultSliderConfig: SliderConfig = {
   negative_prompt: 'person who is sad',
   target_class: 'person',
   anchor_class: '',
+};
+
+export const defaultZImageSliderConfig: ZImageSliderConfig = {
+  model_path: '',
+  is_turbo: true,
+  encoder_type: 'gguf',
+  encoder_path: '',
+  encoder_projector_path: '',
+  encoder_adapter_path: '',
+  rank: 16,
+  alpha: 8,
+  steps: 500,
+  lr: 2e-5,
+  weight_decay: 1e-4,
+  batch_size: 1,
+  gradient_checkpointing: true,
+  dtype: 'bf16',
+  device: 'cuda:0',
+  encoder_device: 'cuda:0',
+  max_denoising_steps: 8,
+  denoise_to_fraction: 0.5,
+  sigma_shift: 3.0,
+  cfg_scale: 1.0,
+  targets: [
+    {
+      positive: '',
+      negative: '',
+      target_class: 'a person, portrait photo',
+      weight: 1.0,
+    },
+  ],
+  output_path: 'sliders/slider.safetensors',
+  save_every: 100,
+  sample_every: 100,
+  log_every: 10,
+  vae_path: '',
+  sample_prompts: [
+    'A portrait photograph of a person looking directly at the camera with soft natural lighting.',
+  ],
+  sample_weights: [-5.0, -3.0, -1.0, 0.0, 1.0, 3.0, 5.0],
+  sample_resolution: [896, 1152],
+  sample_steps: 8,
+  sample_seed: 42,
 };
 
 export const defaultJobConfig: JobConfig = {

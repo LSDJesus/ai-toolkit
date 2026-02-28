@@ -108,6 +108,25 @@ export default function Settings() {
                     placeholder="Enter datasets folder path"
                   />
                 </div>
+
+                <div>
+                  <label htmlFor="LUNA_IMAGEGEN_PATH" className="block text-sm font-medium mb-2">
+                    LUNA Image-Gen Path
+                    <div className="text-gray-500 text-sm ml-1">
+                      Path to the LUNA-Image-Gen project root. Required for Z-Image Slider training jobs.
+                      Example: <code>D:\AI\Github_Desktop\LUNA-Image-Gen</code>
+                    </div>
+                  </label>
+                  <input
+                    type="text"
+                    id="LUNA_IMAGEGEN_PATH"
+                    name="LUNA_IMAGEGEN_PATH"
+                    value={settings.LUNA_IMAGEGEN_PATH || ''}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-gray-600 focus:border-transparent"
+                    placeholder="Enter LUNA-Image-Gen path"
+                  />
+                </div>
               </div>
             </div>
           </div>

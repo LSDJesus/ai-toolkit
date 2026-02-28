@@ -35,3 +35,17 @@ export const getHFToken = async () => {
   }
   return token;
 };
+
+export const getLunaImageGenPath = async () => {
+  const key = 'LUNA_IMAGEGEN_PATH';
+  let row = await prisma.settings.findFirst({
+    where: {
+      key: key,
+    },
+  });
+  let lunaPath = '';
+  if (row?.value && row.value !== '') {
+    lunaPath = row.value;
+  }
+  return lunaPath;
+};

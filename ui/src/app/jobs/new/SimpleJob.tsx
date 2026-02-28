@@ -19,6 +19,7 @@ import SampleControlImage from '@/components/SampleControlImage';
 import { FlipHorizontal2, FlipVertical2 } from 'lucide-react';
 import { handleModelArchChange } from './utils';
 import { IoFlaskSharp } from 'react-icons/io5';
+import ZImageSliderForm from './ZImageSliderForm';
 
 type Props = {
   jobConfig: JobConfig;
@@ -65,6 +66,7 @@ export default function SimpleJob({
   }, [modelArch, jobType]);
 
   const isVideoModel = !!(modelArch?.group === 'video');
+  const isZImageSlider = jobConfig.config.process[0].type === 'zimage_slider';
 
   const numTopCards = useMemo(() => {
     let count = 4; // job settings, model config, target config, save config
@@ -182,6 +184,8 @@ export default function SimpleJob({
             )}
           </Card>
 
+          {!isZImageSlider && (
+          <>
           {/* Model Configuration Section */}
           <Card title="Model">
             <SelectInput
@@ -452,7 +456,16 @@ export default function SimpleJob({
               required
             />
           </Card>
+          </>
+          )}
         </div>
+
+        {isZImageSlider && (
+          <ZImageSliderForm jobConfig={jobConfig} setJobConfig={setJobConfig} />
+        )}
+
+        {!isZImageSlider && (
+        <>
         <div>
           <Card title="Training">
             <div className={trainingBarClass}>
@@ -1339,6 +1352,8 @@ export default function SimpleJob({
             </button>
           </Card>
         </div>
+        </>
+        )}
 
         {status === 'success' && <p className="text-green-500 text-center">Training saved successfully!</p>}
         {status === 'error' && <p className="text-red-500 text-center">Error saving training. Please try again.</p>}

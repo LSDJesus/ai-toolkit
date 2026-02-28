@@ -1,5 +1,5 @@
 import { GroupedSelectOption, SelectOption, JobConfig } from '@/types';
-import { defaultSliderConfig } from './jobConfig';
+import { defaultSliderConfig, defaultZImageSliderConfig } from './jobConfig';
 
 type Control = 'depth' | 'line' | 'pose' | 'inpaint';
 
@@ -770,6 +770,19 @@ export const jobTypeOptions: JobTypeOption[] = [
     onDeactivate: (config: JobConfig) => {
       // remove slider config
       delete config.config.process[0].slider;
+      return config;
+    },
+  },
+  {
+    value: 'zimage_slider',
+    label: 'Z-Image Slider (LUNA)',
+    disableSections: ['slider', 'trigger_word', 'model.quantize', 'train.diff_output_preservation', 'train.blank_prompt_preservation'],
+    onActivate: (config: JobConfig) => {
+      config.config.process[0].zimage_slider = { ...defaultZImageSliderConfig };
+      return config;
+    },
+    onDeactivate: (config: JobConfig) => {
+      delete config.config.process[0].zimage_slider;
       return config;
     },
   },

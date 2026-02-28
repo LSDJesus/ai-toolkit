@@ -3,7 +3,7 @@ import { Job } from '@prisma/client';
 import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs';
-import { TOOLKIT_ROOT, getTrainingFolder, getHFToken } from '../paths';
+import { TOOLKIT_ROOT, getTrainingFolder, getHFToken, getLunaImageGenPath } from '../paths';
 const isWindows = process.platform === 'win32';
 
 const startAndWatchJob = (job: Job) => {
@@ -52,33 +52,81 @@ const startAndWatchJob = (job: Job) => {
     // write the config file
     fs.writeFileSync(configPath, JSON.stringify(jobConfig, null, 2));
 
-    let pythonPath = 'python';
-    // use .venv or venv if it exists
-    if (fs.existsSync(path.join(TOOLKIT_ROOT, '.venv'))) {
-      if (isWindows) {
-        pythonPath = path.join(TOOLKIT_ROOT, '.venv', 'Scripts', 'python.exe');
-      } else {
-        pythonPath = path.join(TOOLKIT_ROOT, '.venv', 'bin', 'python');
-      }
-    } else if (fs.existsSync(path.join(TOOLKIT_ROOT, 'venv'))) {
-      if (isWindows) {
-        pythonPath = path.join(TOOLKIT_ROOT, 'venv', 'Scripts', 'python.exe');
-      } else {
-        pythonPath = path.join(TOOLKIT_ROOT, 'venv', 'bin', 'python');
-      }
-    }
+    // Determine if this is a Z-Image slider job (LUNA pipeline)
+    const jobType = jobConfig?.config?.process?.[0]?.type;
+    const isZImageJob = jobType === 'zimage_slider';
 
-    const runFilePath = path.join(TOOLKIT_ROOT, 'run.py');
-    if (!fs.existsSync(runFilePath)) {
-      console.error(`run.py not found at path: ${runFilePath}`);
-      await prisma.job.update({
-        where: { id: jobID },
-        data: {
-          status: 'error',
-          info: `Error launching job: run.py not found`,
-        },
-      });
-      return;
+    let pythonPath = 'python';
+    let runFilePath: string;
+    let cwd: string;
+
+    if (isZImageJob) {
+      // ---- Z-Image Slider: use LUNA-Image-Gen's Python & bridge script ----
+      const lunaPath = await getLunaImageGenPath();
+      if (!lunaPath || lunaPath.trim() === '') {
+        console.error('LUNA_IMAGEGEN_PATH not configured in Settings');
+        await prisma.job.update({
+          where: { id: jobID },
+          data: {
+            status: 'error',
+            info: 'Error: LUNA_IMAGEGEN_PATH not set in Settings. Go to Settings and set the path to your LUNA-Image-Gen project.',
+          },
+        });
+        return;
+      }
+
+      cwd = lunaPath;
+      runFilePath = path.join(lunaPath, 'run_slider_from_ui.py');
+
+      // Use LUNA-Image-Gen's venv
+      if (fs.existsSync(path.join(lunaPath, '.venv'))) {
+        pythonPath = isWindows
+          ? path.join(lunaPath, '.venv', 'Scripts', 'python.exe')
+          : path.join(lunaPath, '.venv', 'bin', 'python');
+      } else if (fs.existsSync(path.join(lunaPath, 'venv'))) {
+        pythonPath = isWindows
+          ? path.join(lunaPath, 'venv', 'Scripts', 'python.exe')
+          : path.join(lunaPath, 'venv', 'bin', 'python');
+      }
+
+      if (!fs.existsSync(runFilePath)) {
+        console.error(`run_slider_from_ui.py not found at path: ${runFilePath}`);
+        await prisma.job.update({
+          where: { id: jobID },
+          data: {
+            status: 'error',
+            info: `Error: run_slider_from_ui.py not found at ${runFilePath}`,
+          },
+        });
+        return;
+      }
+    } else {
+      // ---- Standard ai-toolkit job ----
+      cwd = TOOLKIT_ROOT;
+
+      // use .venv or venv if it exists
+      if (fs.existsSync(path.join(TOOLKIT_ROOT, '.venv'))) {
+        pythonPath = isWindows
+          ? path.join(TOOLKIT_ROOT, '.venv', 'Scripts', 'python.exe')
+          : path.join(TOOLKIT_ROOT, '.venv', 'bin', 'python');
+      } else if (fs.existsSync(path.join(TOOLKIT_ROOT, 'venv'))) {
+        pythonPath = isWindows
+          ? path.join(TOOLKIT_ROOT, 'venv', 'Scripts', 'python.exe')
+          : path.join(TOOLKIT_ROOT, 'venv', 'bin', 'python');
+      }
+
+      runFilePath = path.join(TOOLKIT_ROOT, 'run.py');
+      if (!fs.existsSync(runFilePath)) {
+        console.error(`run.py not found at path: ${runFilePath}`);
+        await prisma.job.update({
+          where: { id: jobID },
+          data: {
+            status: 'error',
+            info: `Error launching job: run.py not found`,
+          },
+        });
+        return;
+      }
     }
 
     const additionalEnv: any = {
@@ -107,7 +155,7 @@ const startAndWatchJob = (job: Job) => {
             ...process.env,
             ...additionalEnv,
           },
-          cwd: TOOLKIT_ROOT,
+          cwd: cwd,
           detached: true,
           windowsHide: true,
           stdio: 'ignore', // don't tie stdio to parent
@@ -121,7 +169,7 @@ const startAndWatchJob = (job: Job) => {
             ...process.env,
             ...additionalEnv,
           },
-          cwd: TOOLKIT_ROOT,
+          cwd: cwd,
         });
       }
 

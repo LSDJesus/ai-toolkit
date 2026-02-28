@@ -217,6 +217,62 @@ export interface SliderConfig {
   anchor_class?: string | null;
 }
 
+export interface ZImageSliderTarget {
+  positive: string;
+  negative: string;
+  target_class: string;
+  weight: number;
+}
+
+export interface ZImageSliderConfig {
+  // Model
+  model_path: string;
+  is_turbo: boolean;
+
+  // Encoder
+  encoder_type: 'gguf' | 'safetensors';
+  encoder_path: string;
+  encoder_projector_path: string;
+  encoder_adapter_path: string;
+
+  // LoRA
+  rank: number;
+  alpha: number;
+
+  // Training
+  steps: number;
+  lr: number;
+  weight_decay: number;
+  batch_size: number;
+  gradient_checkpointing: boolean;
+  dtype: string;
+  device: string;
+  encoder_device: string;
+
+  // Denoising
+  max_denoising_steps: number;
+  denoise_to_fraction: number;
+  sigma_shift: number;
+  cfg_scale: number;
+
+  // Targets
+  targets: ZImageSliderTarget[];
+
+  // Save
+  output_path: string;
+  save_every: number;
+  sample_every: number;
+  log_every: number;
+
+  // VAE & Sampling
+  vae_path: string;
+  sample_prompts: string[];
+  sample_weights: number[];
+  sample_resolution: number[];
+  sample_steps: number;
+  sample_seed: number;
+}
+
 export interface ProcessConfig {
   type: string;
   sqlite_db_path?: string;
@@ -226,6 +282,7 @@ export interface ProcessConfig {
   device: string;
   network?: NetworkConfig;
   slider?: SliderConfig;
+  zimage_slider?: ZImageSliderConfig;
   save: SaveConfig;
   datasets: DatasetConfig[];
   train: TrainConfig;
