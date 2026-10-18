@@ -1,7 +1,11 @@
 from typing import List
+
 import torch
-from transformers import AutoTokenizer, UMT5EncoderModel
-from toolkit.models.loaders.comfy import get_comfy_path
+
+from toolkit.models.v2.text_encoders.umt5 import (
+    PatchedT5Tokenizer,
+    UMT5TextEncoder,
+)
 
 
 def get_umt5_encoder(
@@ -9,24 +13,17 @@ def get_umt5_encoder(
     tokenizer_subfolder: str = None,
     encoder_subfolder: str = None,
     torch_dtype: str = torch.bfloat16,
-    comfy_files: List[str] = [
-        "text_encoders/umt5_xxl_fp16.safetensors",
-        "text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors",
-    ],
-) -> UMT5EncoderModel:
-    """
-    Load the UMT5 encoder model from the specified path.
-    """
-    tokenizer = AutoTokenizer.from_pretrained(model_path, subfolder=tokenizer_subfolder)
-    comfy_path = get_comfy_path(comfy_files)
-    comfy_path = None
-    if comfy_path is not None:
-        text_encoder = UMT5EncoderModel.from_single_file(
-            comfy_path, torch_dtype=torch_dtype
-        )
-    else:
-        print(f"Using {model_path} for UMT5 encoder.")
-        text_encoder = UMT5EncoderModel.from_pretrained(
-            model_path, subfolder=encoder_subfolder, torch_dtype=torch_dtype
-        )
+    # reserved for the comfy-weights flip (Phase 2); accepted for
+    # signature compatibility, not consulted yet
+    comfy_files: List[str] = None,
+):
+    """Load the UMT5 tokenizer + encoder. Thin compatibility wrapper around
+    toolkit/models/v2/text_encoders/umt5.py."""
+    tokenizer = UMT5TextEncoder.load_tokenizer(
+        model_path, subfolder=tokenizer_subfolder or ""
+    )
+    print(f"Using {model_path} for UMT5 encoder.")
+    text_encoder = UMT5TextEncoder.load_model(
+        model_path, dtype=torch_dtype, subfolder=encoder_subfolder or ""
+    )
     return tokenizer, text_encoder

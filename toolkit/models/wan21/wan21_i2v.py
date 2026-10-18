@@ -1,4 +1,5 @@
 # WIP, coming soon ish
+from toolkit.models.v2.vision_encoders.clip_vision import CLIPVisionEncoder
 from functools import partial
 import torch
 import yaml
@@ -314,10 +315,8 @@ class Wan21I2V(Wan21):
                 self.model_config.extras_name_or_path  , 
                 subfolder="image_processor"
             )
-            self.image_encoder = CLIPVisionModel.from_pretrained(
-                self.model_config.extras_name_or_path,
-                subfolder="image_encoder",
-                torch_dtype=dtype,
+            self.image_encoder = CLIPVisionEncoder.load_model(
+                self.model_config.extras_name_or_path, dtype=dtype
             )
         except Exception as e:
             # load from name_or_path
@@ -325,10 +324,8 @@ class Wan21I2V(Wan21):
                 self.model_config.name_or_path_original, 
                 subfolder="image_processor"
             )
-            self.image_encoder = CLIPVisionModel.from_pretrained(
-                self.model_config.name_or_path_original,
-                subfolder="image_encoder",
-                torch_dtype=dtype,
+            self.image_encoder = CLIPVisionEncoder.load_model(
+                self.model_config.name_or_path_original, dtype=dtype
             )
         self.image_encoder.to(self.device_torch, dtype=dtype)
         self.image_encoder.eval()
@@ -369,7 +366,9 @@ class Wan21I2V(Wan21):
         
 
     def get_generation_pipeline(self):
-        scheduler = UniPCMultistepScheduler(**scheduler_configUniPC)
+        # todo unipc got broken in a diffusers update. Use euler for now.
+        # scheduler = UniPCMultistepScheduler(**self._wan_generation_scheduler_config)
+        scheduler = self.get_train_scheduler()
         if self.model_config.low_vram:
             pipeline = AggressiveWanI2VUnloadPipeline(
                 vae=self.vae,

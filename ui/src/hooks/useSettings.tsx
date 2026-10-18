@@ -7,6 +7,7 @@ export interface Settings {
   HF_TOKEN: string;
   TRAINING_FOLDER: string;
   DATASETS_FOLDER: string;
+  MODELS_PATH: string;
   LUNA_IMAGEGEN_PATH: string;
 }
 
@@ -15,6 +16,7 @@ export default function useSettings() {
     HF_TOKEN: '',
     TRAINING_FOLDER: '',
     DATASETS_FOLDER: '',
+    MODELS_PATH: '',
     LUNA_IMAGEGEN_PATH: '',
   });
   const [isSettingsLoaded, setIsLoaded] = useState(false);
@@ -28,6 +30,7 @@ export default function useSettings() {
           HF_TOKEN: data.HF_TOKEN || '',
           TRAINING_FOLDER: data.TRAINING_FOLDER || '',
           DATASETS_FOLDER: data.DATASETS_FOLDER || '',
+          MODELS_PATH: data.MODELS_PATH || '',
           LUNA_IMAGEGEN_PATH: data.LUNA_IMAGEGEN_PATH || '',
         });
         setIsLoaded(true);
