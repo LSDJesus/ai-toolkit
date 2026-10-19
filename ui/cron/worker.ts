@@ -5,7 +5,10 @@ import prisma from './prisma';
 // the trainer/worker write, which is what we want on a local disk. Users on
 // setups where WAL can't work (e.g. db on a network filesystem) can override
 // with AI_TOOLKIT_DB_JOURNAL_MODE=DELETE (or any other valid sqlite mode).
-const DEFAULT_JOURNAL_MODE = 'WAL';
+// This fork defaults to DELETE: the checkout is also shared over SMB, and WAL's
+// shared-memory index went out of sync here and the db read as malformed. Set
+// AI_TOOLKIT_DB_JOURNAL_MODE=WAL to opt back in.
+const DEFAULT_JOURNAL_MODE = 'DELETE';
 const VALID_JOURNAL_MODES = ['DELETE', 'TRUNCATE', 'PERSIST', 'MEMORY', 'WAL', 'OFF'];
 
 async function ensureJournalMode() {
