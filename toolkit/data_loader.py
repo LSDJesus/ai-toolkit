@@ -783,6 +783,13 @@ def get_dataloader_from_datasets(
         # does work on the first call) and per-epoch shuffling happens in the main process
         # sampler, so workers never hold stale state.
         dataloader_kwargs['persistent_workers'] = True
+        # Python 3.14 made forkserver the default on Linux. Its workers are forked
+        # from a helper that preloaded run.py (which initializes CUDA), then
+        # re-import the data stack, and torchao queries the GPU at import, which
+        # CUDA refuses in a forked process. Fork from the trainer instead, as Linux
+        # did before 3.14; the workers never touch CUDA.
+        if platform.system() == "Linux":
+            dataloader_kwargs['multiprocessing_context'] = 'fork'
         # spawned workers re-import the full stack at boot and would repeat every
         # import-time warning the parent already printed. Children inherit these env
         # vars; the parent is unaffected since its imports already happened.
