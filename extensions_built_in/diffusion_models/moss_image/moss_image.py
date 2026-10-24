@@ -369,6 +369,11 @@ class MossImageModel(BaseModel):
                     )
                 ]
 
+        # ComfyUI's er_sde / beta on request: sample.extra_kwargs
+        # {"sampler": "er_sde", "scheduler": "beta", ...}; the vendor's Euler
+        # on its own grid otherwise
+        opts = dict(gen_config.extra_kwargs or {})
+        seed = gen_config.seed if gen_config.seed is not None and gen_config.seed >= 0 else None
         result = pipeline(
             conditional_embeds=conditional_embeds,
             unconditional_embeds=unconditional_embeds,
@@ -382,6 +387,10 @@ class MossImageModel(BaseModel):
             uncond_skip_layers=self.uncond_skip_layers,
             ref_latents=ref_latents,
             isolate_refs=self.kv_cache,
+            sampler=opts.get("sampler", "euler"),
+            scheduler=opts.get("scheduler", "moss"),
+            noise_seed=seed,
+            sampler_options=opts,
         )
         return result[0]
 
